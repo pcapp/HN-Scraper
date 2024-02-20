@@ -13,6 +13,7 @@
     "@sendgrid/mail": "^8.1.1",
     "commander": "^12.0.0",
     "dotenv": "^16.4.4",
-    "mongodb": "^6.3.0"
+    "mongodb": "^6.3.0",
+    "seedrandom": "^3.0.5"
   }
 }

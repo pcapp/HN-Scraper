@@ -1,5 +1,6 @@
 const { MongoClient } = require("mongodb");
 const sgMail = require("@sendgrid/mail");
+const seedrandom = require("seedrandom");
 
 require("dotenv").config();
 
@@ -9,6 +10,7 @@ const url = process.env.DB_URL;
 const dbName = process.env.DB_NAME;
 
 const client = new MongoClient(url);
+const rng = seedrandom(process.env.RANDOM_SEED);
 
 async function getItem(itemNumber) {
   const url = `https://hacker-news.firebaseio.com/v0/item/${itemNumber}.json`;
@@ -34,15 +36,18 @@ async function getItem(itemNumber) {
   }
 }
 
-async function sendDoneEmail() {
+function sleep() {
+  const time = Math.round(500 + rng() * 250);
+  return new Promise((resolve) => setTimeout(resolve, time));
+}
+
+async function sendEmail(subject, message) {
   const msg = {
     to: "peter.cappetto@gmail.com",
-    from: "peter@petercappetto.com", // Change to your verified sender
-    subject: "Worker completed",
-    text: "and easy to do anywhere, even with Node.js",
-    html: "<strong>and easy to do anywhere, even with Node.js</strong>",
+    from: "peter@petercappetto.com",
+    subject,
+    text: message,
   };
-
   await sgMail.send(msg);
 }
 
@@ -60,10 +65,8 @@ async function main() {
 
     await client.connect();
 
-    // const startId = 39422168;
-    // const endId = startId + 10;
-
     for (let itemId = startId; itemId < endId; ++itemId) {
+      console.log(`Process item ${itemId}`);
       const data = await getItem(itemId);
 
       const db = client.db(dbName);
@@ -74,11 +77,18 @@ async function main() {
       };
 
       await items.updateOne(filter, update, { upsert: true });
+      await sleep();
     }
 
-    // await sendDoneEmail();
+    await sendEmail("Worker done", "Finished processing all the items");
   } catch (err) {
     console.error(err);
+    await sendEmail(
+      "Worker error",
+      `
+    An error occurred: ${err}
+    `
+    );
   } finally {
     await client.close();
   }
