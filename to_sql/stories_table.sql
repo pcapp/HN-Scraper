@@ -6,6 +6,7 @@ CREATE TABLE stories (
     dead BOOLEAN NOT NULL DEFAULT false,
     url VARCHAR(2048),
     title TEXT,
+    score INTEGER NOT NULL,
     CONSTRAINT fk_user FOREIGN KEY (by) REFERENCES users(id)
 );
 
