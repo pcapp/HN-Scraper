@@ -1,6 +1,5 @@
-CREATE TABLE posts (
+CREATE TABLE stories (
     id INTEGER PRIMARY KEY,
-    deleted BOOLEAN NOT NULL DEFAULT false,
     by TEXT NOT NULL,
     time TIMESTAMP WITH TIME ZONE NOT NULL,
     text TEXT,

@@ -67,6 +67,35 @@ def insert_batch(cursor, batch):
     pass
 
 
+insert_user_query = """
+INSERT INTO users (id) VALUES (%s)
+ON CONFLICT(id)
+DO NOTHING
+"""
+
+
+def build_insert_stories_query(story: Story) -> str:
+    pairs = {}
+    pairs["id"] = str(story.id)
+    pairs["by"] = str(story.by)
+    pairs["text"] = f'"{story.text}"'
+    pairs["time"] = f"to_timestamp({story.time})"
+
+    column_names = []
+    values = []
+
+    for k, v in pairs.items():
+        column_names.append(k)
+        values.append(v)
+
+    query = f"""
+    INSERT INTO stories ({", ".join(column_names)})
+    VALUES ({", ".join(values)})
+    """
+
+    return query
+
+
 query = {"deleted": {"$exists": False}}
 results = items.find(query).sort("time", pymongo.ASCENDING)
 
@@ -81,7 +110,9 @@ for result in results:
     if item_type == "story":
         try:
             story = Story(**result)
+            users.add(comment.by)
             stories[story.id] = story
+
         except ValidationError as e:
             skipped_record = SkippedRecord(record=result, errors=e.errors())
             skipped.append(skipped)
@@ -96,14 +127,9 @@ for result in results:
             skipped_record = SkippedRecord(record=result, errors=e.errors())
             skipped.append(skipped)
 
-print(f"{len(skipped)} unusable items.")
+print(f"{len(skipped):,} unusable items.")
 print(f"{num_top_level_comments:,} top-level comments found.")
-
-# pg_cur.execute("select * from  users")
-# records = pg_cur.fetchall()
-
-# for record in records:
-#     print(record)
+print(f"{len(users):,} users found.")
 
 # for document in mongo_collection.find():
 #     # Transform your document here
