@@ -1,7 +1,35 @@
+from pydantic import BaseModel, ValidationError
+from pydantic_core import ErrorDetails
 import pymongo
 import psycopg2
 from dotenv import load_dotenv
 import os
+from typing_extensions import TypedDict
+from typing import Dict, List, Optional, Any, Tuple
+from pprint import pprint
+
+
+class Story(BaseModel):
+    id: int
+    by: str
+    text: Optional[str] = None
+    time: int
+    kids: Optional[List[int]] = []
+    score: int
+    title: Optional[str] = None
+    url: Optional[str] = None
+
+
+class ErrorDetails(TypedDict):
+    loc: Tuple[str]
+    msg: str
+    type: str
+
+
+class SkippedRecord(BaseModel):
+    record: Dict[str, Any]
+    errors: List[ErrorDetails]
+
 
 load_dotenv()
 
@@ -30,11 +58,28 @@ def insert_batch(cursor, batch):
     pass
 
 
-pg_cur.execute("select * from users")
-records = pg_cur.fetchall()
+query = {"deleted": {"$exists": False}}
+results = items.find(query).sort("time", pymongo.ASCENDING)
 
-for record in records:
-    print(record)
+stores = {}
+users = set()
+skipped = []
+
+for result in results:
+    if result.get("type") == "story":
+        try:
+            story = Story(**result)
+        except ValidationError as e:
+            skipped_record = SkippedRecord(record=result, errors=e.errors())
+            skipped.append(skipped)
+
+print(f"{len(skipped)} unusable stories.")
+
+# pg_cur.execute("select * from  users")
+# records = pg_cur.fetchall()
+
+# for record in records:
+#     print(record)
 
 # for document in mongo_collection.find():
 #     # Transform your document here
