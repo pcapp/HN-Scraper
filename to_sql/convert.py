@@ -151,13 +151,13 @@ for result in results:
 
     if len(batch) >= batch_size:
         pg_cur.execute(b";".join(batch))
+        pg_conn.commit()
         batch = []
 
 # Insert any remaining documents
 if batch:
     pg_cur.execute(b";".join(batch))
-
-pg_conn.commit()
+    pg_conn.commit()
 
 print(f"{len(skipped):,} unusable items.")
 print(f"{num_stories} usable stories found.")
