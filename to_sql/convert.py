@@ -20,6 +20,15 @@ class Story(BaseModel):
     url: Optional[str] = None
 
 
+class Comment(BaseModel):
+    id: int
+    by: str
+    kids: Optional[List[int]] = []
+    parent: int
+    text: str
+    time: int
+
+
 class ErrorDetails(TypedDict):
     loc: Tuple[str]
     msg: str
@@ -61,19 +70,34 @@ def insert_batch(cursor, batch):
 query = {"deleted": {"$exists": False}}
 results = items.find(query).sort("time", pymongo.ASCENDING)
 
-stores = {}
+stories = {}
 users = set()
 skipped = []
+num_top_level_comments = 0
 
 for result in results:
-    if result.get("type") == "story":
+    item_type = result.get("type")
+
+    if item_type == "story":
         try:
             story = Story(**result)
+            stories[story.id] = story
+        except ValidationError as e:
+            skipped_record = SkippedRecord(record=result, errors=e.errors())
+            skipped.append(skipped)
+    elif item_type == "comment":
+        try:
+            comment = Comment(**result)
+            users.add(comment.by)
+
+            if comment.parent in stories:
+                num_top_level_comments += 1
         except ValidationError as e:
             skipped_record = SkippedRecord(record=result, errors=e.errors())
             skipped.append(skipped)
 
-print(f"{len(skipped)} unusable stories.")
+print(f"{len(skipped)} unusable items.")
+print(f"{num_top_level_comments:,} top-level comments found.")
 
 # pg_cur.execute("select * from  users")
 # records = pg_cur.fetchall()
