@@ -13,6 +13,9 @@ python-dotenv = "^1.0.1"
 pydantic = "^2.6.1"
 typing-extensions = "^4.9.0"
 pytest = "^8.0.1"
+tqdm = "^4.66.2"
+pandas = "^2.2.0"
+pyarrow = "^15.0.0"
 
 
 [build-system]

@@ -1,0 +1,10 @@
+CREATE TABLE comments(
+  id INTEGER PRIMARY KEY,
+  by TEXT NOT NULL,
+  parent INTEGER NOT NULL,
+  is_top_level BOOLEAN NOT NULL,
+  text TEXT NOT NULL,
+  time TIMESTAMP WITH TIME ZONE NOT NULL,
+  kids INTEGER[],
+  CONSTRAINT fk_user FOREIGN KEY (by) REFERENCES users(id)
+);
