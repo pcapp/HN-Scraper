@@ -22,6 +22,7 @@ transformers = "^4.38.1"
 datasets = "^2.17.1"
 jupyterlab = "^4.1.2"
 matplotlib = "^3.8.3"
+accelerate = "^0.27.2"
 
 
 [build-system]
